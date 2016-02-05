@@ -3,6 +3,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Data;
+using System.Data.OleDb;
 using System.Data.SqlClient;
 using System.Data.SqlTypes;
 using System.Dynamic;
@@ -531,6 +532,24 @@ namespace Dapper.Tests
             result[1].IsEqualTo(2);
             result[2].IsEqualTo(3);
         }
+
+        [Fact]
+        public void TestUsingInQuery()
+        {
+            using (var connection = new OleDbConnection(OleDbConnectionString))
+            {
+                DynamicParameters p = new DynamicParameters();
+                var list = new int[] { 1, 2, 3 };
+                p.AddDynamicParams(new { list });
+
+                var result = connection.Query<int>("select * from (select 1 A union all select 2 union all select 3) X where A in ?", p).ToList();
+
+                result[0].IsEqualTo(1);
+                result[1].IsEqualTo(2);
+                result[2].IsEqualTo(3);
+            }
+        }
+
 
         [Fact]
         public void TestAppendingAListAsDictionary()
